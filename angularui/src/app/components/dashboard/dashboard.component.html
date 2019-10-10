@@ -1,0 +1,7 @@
+<div class="jumbotron">
+<div class="container">
+    <h1 class="display-3" *ngIf="page">{{ page.pageTitle }}</h1>
+    <p *ngIf="page">{{ page.pageContent }}</p>
+    <img [src]="'data:image/jpg;base64,'+page.image | safeHtml" />
+</div></div>
+  

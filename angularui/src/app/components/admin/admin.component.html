@@ -1,0 +1,114 @@
+  <h3 align="center">Yönetici Paneli</h3>
+  <div class="container">        
+        <ul class="nav nav-tabs">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#ahome">Kullanıcılar</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#pages">Sayfalar</a>
+          </li>
+        </ul>
+      
+        <div class="tab-content">
+          <div id="ahome" class="container tab-pane active"><br>
+            <h3>Kullanıcı İşlemleri<br/>
+            Merhaba {{ activeUser.userEmail }}</h3>
+            <br/>
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal" (click)="this.registerForm.reset();">
+                Ekle
+              </button>
+            <ul>
+                <li *ngFor="let user of users">
+                    {{user.userEmail}} ({{user.userCreated}})
+                    -- <a data-toggle="modal" data-target="#myModal" class="text-danger" (click)="getValue(user.internalId)">Düzenle</a>
+                    -- <a (click)="deleteUser(user.internalId)" class="text-danger">Sil</a>
+                    
+                </li>
+            </ul>
+          </div>
+          <div id="pages" class="container tab-pane fade"><br>            
+            <form [formGroup]="updateForm" (ngSubmit)= "updatePage()">
+              <div>
+              <select class="custom-select" (change)="changePage($event)" formControlName="pageName">  
+                <option selected value="" disabled >Seçiniz</option>
+                <option *ngFor="let page of pages; let i = index" [ngValue]="page.pageName" [value]="i">{{ page.pageTitle }}</option>  
+              </select>
+              <br/>
+              <dt>Sayfa Başlığı</dt><br/>
+              <input formControlName="pageTitle" type="text" class="form-control" [(ngModel)]="selectedpage.pageTitle" />
+              <br/>
+              <dt>Sayfa İçeriği</dt><br/>
+              <textarea formControlName="pageContent" class="form-control" [(ngModel)]="selectedpage.pageContent"></textarea>
+              <dt>Sayfa Resmi</dt><br/>
+              <input type="file" (change)="onFileChange($event)" />
+              <img [src]="'data:image/jpg;base64,'+selectedpage.image | safeHtml" />
+              </div>
+              <br/>
+              <button class="btn btn-primary">Güncelle</button>
+            </form>
+            <br/>              
+          </div>
+          <div *ngIf="alrt" class="alert alert-danger">
+              {{ this.alrt}}
+          </div>
+          <button type="button" class="btn btn-info"(click)="logout()">Çıkış</button>
+      </div>
+      
+    <!-- The Modal -->
+    <div class="modal fade" id="myModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+        
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">Kullanıcı Bilgileri</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          
+          <!-- Modal body -->
+          <div class="modal-body">
+              <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">                
+                <div class="form-group">
+                    Kullanıcı E-posta
+                    <input type="text" formControlName="userEmail" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.userEmail.errors }"/>
+                    <div *ngIf="submitted && f.userEmail.errors" class="invalid-feedback">
+                      <div *ngIf="f.userEmail.errors.required">E-posta adresi giriniz.</div>
+                      <div *ngIf="f.userEmail.errors.email">Lütfen geçerli bir e-posta giriniz.</div>
+                  </div>
+                </div>
+                <div class="form-group">
+                    Kullanıcı Şifre
+                    <input type="password"  formControlName="userPassword" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.userPassword.errors }"/>
+                    <div *ngIf="submitted && f.userPassword.errors" class="invalid-feedback">
+                      <div *ngIf="f.userPassword.errors.required">Şifre giriniz.</div>
+                      <div *ngIf="f.userPassword.errors.minlength">Şifre en az 3 karakter olmalı!</div>
+                  </div>
+                </div>
+                <div class="form-group">
+                    Kullanıcı Tipi
+                    <select class="form-control" formControlName="userType">
+                      <option value="1" selected="true">Admin</option>
+                      <option value="2">Editör</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    Kullanıcı Durumu
+                    <select class="form-control" formControlName="userStatus">
+                      <option value="0">Pasif</option>
+                      <option value="1" selected="true">Aktif</option>
+                    </select>
+                </div>
+                  <div class="form-group">
+                      <button class="btn btn-info" click="onSubmit()">Kaydet</button>                      
+                  </div>
+              </form>    
+          </div>
+          
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal" (click)="this.registerForm.reset();this.upd='';">Kapat</button>
+          </div>          
+        </div>
+      </div>
+    </div>
+  </div>
