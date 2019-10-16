@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http
 import { Page } from '../../models/page';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { User } from 'src/app/models/user';
+import * as ClassicEditorBuild from '@ckeditor/ckeditor5-build-classic';
 
 const API_URL = environment.apiUrl;
 
@@ -25,6 +26,7 @@ export class AdminComponent implements OnInit {
   registerForm: FormGroup;
   upd: string;
   pageImage: string;
+  Editor = ClassicEditorBuild;
 
   ngOnInit() {
     this.submitted  = false;
@@ -120,7 +122,7 @@ export class AdminComponent implements OnInit {
     obj.pageName = this.selectedpage.pageName;
     obj.pageTitle = this.updateForm.get('pageTitle').value;
     obj.pageContent = this.updateForm.get('pageContent').value;
-    obj.Image = this.pageImage;
+    obj.Image = this.pageImage ? this.pageImage : null;
     // console.log(obj.pageName);
     this.httpClient
       .post(API_URL + '/api/pages/UpdatePage', obj , { headers: header })

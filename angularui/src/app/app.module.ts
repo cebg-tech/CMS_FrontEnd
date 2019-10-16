@@ -12,6 +12,7 @@ import { AboutusComponent } from './components/aboutus/aboutus.component';
 import { ContactComponent } from './components/contact/contact.component';
 import { ExampleComponent } from './components/example/example.component';
 import { SafeHtmlPipe } from './safe-html.pipe';
+import { CKEditorModule } from '../ckeditor/ckeditor.module';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import { SafeHtmlPipe } from './safe-html.pipe';
     AppRoutingModule,
     FormsModule,
     HttpClientModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    CKEditorModule
   ],
   providers: [],
   bootstrap: [AppComponent]

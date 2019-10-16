@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, AfterViewInit} from '@angular/core';
 import { MustMatch } from '../../helpers/must-match.validator';
-import { FormGroup, Validators, FormBuilder } from '@angular/forms';
-
+import { FormGroup, FormControl } from '@angular/forms';
+import * as ClassicEditorBuild from '@ckeditor/ckeditor5-build-classic';
 
 
 
@@ -9,51 +9,34 @@ import { FormGroup, Validators, FormBuilder } from '@angular/forms';
   selector: 'app-example',
   templateUrl: './example.component.html'
 })
-export class ExampleComponent implements OnInit {
-    registerForm: FormGroup;
-    submitted = false;
-    formGroup = this.fb.group({
-      file: [null, Validators.required]
-    });
-    binaryString: string;
+export class ExampleComponent implements AfterViewInit {
+  public Editor = ClassicEditorBuild;
 
-constructor(private formBuilder: FormBuilder, private fb: FormBuilder) { }
+	public demoReactiveForm = new FormGroup( {
+		name: new FormControl( 'John' ),
+		surname: new FormControl( 'Doe' ),
+		description: new FormControl( '<p>A <b>really</b> nice fellow.</p>' ),
+	} );
 
-ngOnInit() {
-    this.registerForm = this.formBuilder.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required]
-  }, {
-      validator: MustMatch('password', 'confirmPassword')
-  });
-  }
-  get f() { return this.registerForm.controls; }
-  onSubmit() {
-    this.submitted = true;
+	public formDataPreview?: string;
 
-    // stop here if form is invalid
-    if (this.registerForm.invalid) {
-        return;
-    }
+	public ngAfterViewInit() {
+		this.demoReactiveForm!.valueChanges
+			.subscribe( values => {
+				this.formDataPreview = JSON.stringify( values );
+			} );
+	}
 
-    alert('SUCCESS!! :-)\n\n' + JSON.stringify(this.registerForm.value));
-}
-  onFileChange(event) {
-    var files = event.target.files;
-    var file = files[0];
-    if (files && file) {
-      var reader = new FileReader();
-      reader.onload = this.handleFile.bind(this);
-      reader.readAsBinaryString(file);
-    }
-  }
-  handleFile(event) {
-    this.binaryString = event.target.result;
-    this.binaryString = btoa(this.binaryString);
-    console.log(this.binaryString);
-   }
+	public onSubmit() {
+		console.log( 'Form submit, model', this.demoReactiveForm.value );
+	}
+
+	public reset() {
+		this.demoReactiveForm!.reset();
+	}
+
+	public get description() {
+		return this.demoReactiveForm!.controls.description;
+	}
 }
 

@@ -38,10 +38,14 @@
               <input formControlName="pageTitle" type="text" class="form-control" [(ngModel)]="selectedpage.pageTitle" />
               <br/>
               <dt>Sayfa İçeriği</dt><br/>
-              <textarea formControlName="pageContent" class="form-control" [(ngModel)]="selectedpage.pageContent"></textarea>
+              <!-- <textarea formControlName="pageContent" class="form-control" [(ngModel)]="selectedpage.pageContent"></textarea> -->
+              <ckeditor formControlName="pageContent"
+                  [editor]="Editor"
+                  [(ngModel)]="selectedpage.pageContent">
+              </ckeditor>
               <dt>Sayfa Resmi</dt><br/>
               <input type="file" (change)="onFileChange($event)" />
-              <img [src]="'data:image/jpg;base64,'+selectedpage.image | safeHtml" />
+              <div *ngIf="selectedpage.image"><img [src]="'data:image/jpg;base64,'+selectedpage.image | safeHtml" /></div>
               </div>
               <br/>
               <button class="btn btn-primary">Güncelle</button>
