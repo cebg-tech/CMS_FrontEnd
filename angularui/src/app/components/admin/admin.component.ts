@@ -6,6 +6,7 @@ import { Page } from '../../models/page';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { User } from 'src/app/models/user';
 import * as ClassicEditorBuild from '@ckeditor/ckeditor5-build-classic';
+import { AlertifyService } from '../../services/alertify.service';
 
 const API_URL = environment.apiUrl;
 
@@ -15,7 +16,13 @@ const API_URL = environment.apiUrl;
 })
 export class AdminComponent implements OnInit {
 
-  constructor(private router: Router, private httpClient: HttpClient, private formBuilder: FormBuilder) {}
+  constructor(
+    private router: Router,
+    private httpClient: HttpClient,
+    private formBuilder: FormBuilder,
+    private alertify: AlertifyService
+  ) { }
+
   pages: any;
   selectedpage: any;
   updateForm: FormGroup;
@@ -29,10 +36,12 @@ export class AdminComponent implements OnInit {
   Editor = ClassicEditorBuild;
 
   ngOnInit() {
-    this.submitted  = false;
+    this.submitted = false;
     const raw = JSON.parse(localStorage.getItem('ActiveUser'));
-    if (raw === undefined) {
-      alert('Aktif kullanıcı null olamaz'); return; }
+    if (!raw) {
+      this.alertify.error('Lütfen giriş yapınız!');
+      this.router.navigate(['/login']);
+    }
     this.activeUser = new User();
     this.activeUser.internalId = raw.internalId;
     this.activeUser.userEmail = raw.userEmail;
@@ -44,15 +53,15 @@ export class AdminComponent implements OnInit {
       pageContent: '',
       Image: ''
     };
-    this.updateForm = this.formBuilder.group({ pageName: '' , pageTitle: '', pageContent: '', Image: ''});
-    // this.CheckAuthorize(localStorage.getItem('CMS_Token'), this.activeUser.useremail);
+    this.updateForm = this.formBuilder.group({ pageName: '', pageTitle: '', pageContent: '', Image: '' });
     this.FetchPageContents();
     this.registerForm = this.formBuilder.group({
       userEmail: ['', [Validators.required, Validators.email]],
       userPassword: ['', [Validators.required, Validators.minLength(3)]],
       userType: [''],
       userStatus: [''],
-  });
+    });
+    this.upd = '';
   }
 
   get f() { return this.registerForm.controls; }
@@ -65,26 +74,34 @@ export class AdminComponent implements OnInit {
     });
     this.httpClient.get(API_URL + '/api/users/GetAll', { headers: header })
       .subscribe((res: User[]) => {
-      this.users = res;
+        this.users = res;
+      }, (err: HttpErrorResponse) => {
+        if (err.status === 400) {
+          // console.log(err.error.message);
+          this.alertify.error(err.error.message);
+        } else if (err.status === 401) {
+          this.alertify.error('Tekrar giriş yapınız!');
+          this.router.navigate(['/login']);
+        }
       });
   }
 
   CheckAuthorize(inputToken: string, userMail: string) {
-      console.log('admin.checkauthorize');
-      var obj = JSON.parse('{ "userEmail":""}');
-      obj.userEmail = userMail;
-      const _header = new HttpHeaders({
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${inputToken}`
+    console.log('admin.checkauthorize');
+    var obj = JSON.parse('{ "userEmail":""}');
+    obj.userEmail = userMail;
+    const _header = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${inputToken}`
+    });
+    this.httpClient
+      .post(API_URL + '/api/users/UserAccount', obj, { headers: _header })
+      .subscribe(res => {
+      }, (err: HttpErrorResponse) => {
+        if (err.status === 400) {
+          this.router.navigate(['/login']);
+        }
       });
-      this.httpClient
-        .post(API_URL + '/api/users/UserAccount', obj , { headers: _header })
-        .subscribe(res => {
-        }, (err: HttpErrorResponse) => {
-          if (err.status === 400) {
-            // console.log(err.error.message);
-            this.router.navigate(['/login']);
-          }});
   }
 
   FetchPageContents() {
@@ -97,6 +114,14 @@ export class AdminComponent implements OnInit {
       .subscribe((res: Page[]) => {
         this.pages = res;
         console.log(this.pages);
+      }, (err: HttpErrorResponse) => {
+        if (err.status === 400) {
+          // console.log(err.error.message);
+          this.alertify.error(err.error.message);
+        } else if (err.status === 401) {
+          this.alertify.error('Tekrar giriş yapınız!');
+          this.router.navigate(['/login']);
+        }
       });
   }
 
@@ -125,25 +150,27 @@ export class AdminComponent implements OnInit {
     obj.Image = this.pageImage ? this.pageImage : null;
     // console.log(obj.pageName);
     this.httpClient
-      .post(API_URL + '/api/pages/UpdatePage', obj , { headers: header })
+      .post(API_URL + '/api/pages/UpdatePage', obj, { headers: header })
       .subscribe((res: any) => {
-       console.log(res);
-       this.alrt = res.message.toString();
+        console.log(res);
+        this.alertify.success(res.message.toString());
       }, (err: HttpErrorResponse) => {
         if (err.status === 400) {
           // console.log(err.error.message);
-          this.alrt = err.error.message;
+          this.alertify.error(err.error.message);
+        } else if (err.status === 401) {
+          this.alertify.error('Tekrar giriş yapınız!');
+          this.router.navigate(['/login']);
         }
-    });
+      });
   }
 
   deleteUser(id: string) {
-    if ( this.activeUser.internalId === id) {
-      this.alrt = 'Kendi kullanıcını silemezsin!';
+    if (this.activeUser.internalId === id) {
+      this.alertify.error('Kendi kullanıcını silemezsin!');
       return;
     }
-    if (!confirm('Emin misin?'))
-    {
+    if (!confirm('Emin misin?')) {
       return;
     }
     console.log('sil ' + id);
@@ -154,8 +181,16 @@ export class AdminComponent implements OnInit {
     this.httpClient
       .delete(API_URL + '/api/users/' + id, { headers: header })
       .subscribe(res => {
-        this.alrt = 'Kullanıcı silindi.';
+        this.alertify.success('Kullanıcı silindi.');
         this.LoadAllUsers();
+      }, (error: HttpErrorResponse) => {
+        if (error.status === 400) {
+          // console.log(err.error.message);
+          this.alertify.error(error.error.message);
+        } else if (error.status === 401) {
+          this.alertify.error('Tekrar giriş yapınız!');
+          this.router.navigate(['/login']);
+        }
       });
   }
 
@@ -164,7 +199,7 @@ export class AdminComponent implements OnInit {
 
     // stop here if form is invalid
     if (this.registerForm.invalid) {
-        return;
+      return;
     }
     if (this.upd !== '') {
       console.log('Update');
@@ -186,16 +221,19 @@ export class AdminComponent implements OnInit {
       Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
     });
     this.httpClient
-      .post(API_URL + '/api/users/AddUser', obj , { headers: header })
+      .post(API_URL + '/api/users/AddUser', obj, { headers: header })
       .subscribe((res: any) => {
-       this.alrt = res.message.toString();
-       this.LoadAllUsers();
-       this.registerForm.reset();
+        this.alertify.success(res.message.toString());
+        this.LoadAllUsers();
+        this.registerForm.reset();
       }, (err: HttpErrorResponse) => {
         if (err.status === 400) {
-          this.alrt = err.error.message;
+          this.alertify.error(err.error.message);
+        } else if (err.status === 401) {
+          this.alertify.error('Tekrar giriş yapınız!');
+          this.router.navigate(['/login']);
         }
-    });
+      });
   }
 
   updateUser(id: string) {
@@ -210,18 +248,21 @@ export class AdminComponent implements OnInit {
       Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
     });
     this.httpClient
-      .put(API_URL + '/api/users/' + id, obj , { headers: header })
+      .put(API_URL + '/api/users/' + id, obj, { headers: header })
       .subscribe((res: any) => {
-       console.log(res);
-       this.alrt = res.message.toString();
-       this.LoadAllUsers();
-       this.registerForm.reset();
+        console.log(res);
+        this.alertify.success(res.message.toString());
+        this.LoadAllUsers();
+        this.registerForm.reset();
       }, (err: HttpErrorResponse) => {
         if (err.status === 400) {
           // console.log(err.error.message);
-          this.alrt = err.error.message;
+          this.alertify.error(err.error.message);
+        } else if (err.status === 401) {
+          this.alertify.error('Tekrar giriş yapınız!');
+          this.router.navigate(['/login']);
         }
-    });
+      });
     this.upd = '';
   }
 
@@ -233,6 +274,7 @@ export class AdminComponent implements OnInit {
     this.registerForm.get('userType').setValue(found.userType);
     this.registerForm.get('userStatus').setValue(found.userStatus);
   }
+
   onFileChange(event) {
     var files = event.target.files;
     var file = files[0];
@@ -242,9 +284,10 @@ export class AdminComponent implements OnInit {
       reader.readAsBinaryString(file);
     }
   }
+
   handleFile(event) {
     this.pageImage = event.target.result;
     this.pageImage = btoa(this.pageImage);
-    console.log(this.pageImage);
-   }
+    // console.log(this.pageImage);
+  }
 }

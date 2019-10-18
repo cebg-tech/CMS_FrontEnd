@@ -6,6 +6,7 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { AboutusComponent } from './components/aboutus/aboutus.component';
 import { ContactComponent } from './components/contact/contact.component';
 import { ExampleComponent } from './components/example/example.component';
+import { PostComponent } from './components/post/post.component';
 
 
 const routes: Routes = [{ path: '', component: DashboardComponent},
@@ -13,7 +14,8 @@ const routes: Routes = [{ path: '', component: DashboardComponent},
                         { path: 'login', component: LoginComponent},
                         { path: 'aboutus', component: AboutusComponent},
                         { path: 'contact', component: ContactComponent},
-                        { path: 'exm', component: ExampleComponent}
+                        { path: 'exm', component: ExampleComponent},
+                        { path: 'post', component: PostComponent}
 ];
 
 @NgModule({

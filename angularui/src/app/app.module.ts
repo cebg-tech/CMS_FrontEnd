@@ -13,6 +13,9 @@ import { ContactComponent } from './components/contact/contact.component';
 import { ExampleComponent } from './components/example/example.component';
 import { SafeHtmlPipe } from './safe-html.pipe';
 import { CKEditorModule } from '../ckeditor/ckeditor.module';
+import { AlertifyService } from './services/alertify.service';
+import { PostComponent } from './components/post/post.component';
+
 
 @NgModule({
   declarations: [
@@ -23,7 +26,8 @@ import { CKEditorModule } from '../ckeditor/ckeditor.module';
     AboutusComponent,
     ContactComponent,
     ExampleComponent,
-    SafeHtmlPipe
+    SafeHtmlPipe,
+    PostComponent
   ],
   imports: [
     BrowserModule,
@@ -33,7 +37,7 @@ import { CKEditorModule } from '../ckeditor/ckeditor.module';
     ReactiveFormsModule,
     CKEditorModule
   ],
-  providers: [],
+  providers: [AlertifyService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

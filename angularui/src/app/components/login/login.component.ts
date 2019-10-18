@@ -45,6 +45,7 @@ export class LoginComponent implements OnInit {
         }
     });
   }
+
   onSubmit() {
     this.submitted = true;
 
@@ -54,10 +55,10 @@ export class LoginComponent implements OnInit {
     }
     this.Login(this.registerForm.get('email').value, this.registerForm.get('password').value);
     // alert('SUCCESS!! :-)\n\n' + JSON.stringify(this.registerForm.value));
-}
+  }
 
    checkAuthorize(inputToken: string, userMail: string) {
-    var obj = JSON.parse('{ "userEmail":""}');
+    const obj = JSON.parse('{ "userEmail":""}');
     obj.userEmail = userMail;
     const _header = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -66,6 +67,11 @@ export class LoginComponent implements OnInit {
     this.httpClient
       .post(API_URL + '/api/users/UserAccount', obj , { headers: _header })
       .subscribe((response: User) => {
+        // If the user is inactive then navigate to login page
+        if (response.userStatus === 0) {
+          this.alrt = 'Aktif bir kullanıcı değilsiniz. Admin ile iletişime geçin.';
+          return;
+        }
         localStorage.setItem('ActiveUser', JSON.stringify(response));
         this.router.navigate(['/admin']);
       },(err: HttpErrorResponse) => {
