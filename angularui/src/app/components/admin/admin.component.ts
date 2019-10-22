@@ -7,6 +7,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { User } from 'src/app/models/user';
 import * as ClassicEditorBuild from '@ckeditor/ckeditor5-build-classic';
 import { AlertifyService } from '../../services/alertify.service';
+import { Post } from 'src/app/models/post';
 
 const API_URL = environment.apiUrl;
 
@@ -15,6 +16,7 @@ const API_URL = environment.apiUrl;
   templateUrl: './admin.component.html'
 })
 export class AdminComponent implements OnInit {
+
 
   constructor(
     private router: Router,
@@ -29,14 +31,15 @@ export class AdminComponent implements OnInit {
   alrt: string;
   activeUser: User;
   users: User[] = [];
-  submitted: boolean;
+  posts: Post[] = [];
   registerForm: FormGroup;
   upd: string;
   pageImage: string;
   Editor = ClassicEditorBuild;
+  userGroupSubmitted: boolean = false;
+  postGroupSubmitted: boolean = false;
 
   ngOnInit() {
-    this.submitted = false;
     const raw = JSON.parse(localStorage.getItem('ActiveUser'));
     if (!raw) {
       this.alertify.error('Lütfen giriş yapınız!');
@@ -45,6 +48,15 @@ export class AdminComponent implements OnInit {
     this.activeUser = new User();
     this.activeUser.internalId = raw.internalId;
     this.activeUser.userEmail = raw.userEmail;
+
+    // If the user is an editor than show only post page
+    if (raw.userType === 2) {
+      document.getElementById('usersli').remove();
+      document.getElementById('pagesli').remove();
+      document.getElementById('users').remove();
+      document.getElementById('pages').remove();
+      document.getElementById('posts').className = 'container tab-pane active';
+    }
     this.LoadAllUsers();
     this.selectedpage = {
       internalId: '',
@@ -56,15 +68,35 @@ export class AdminComponent implements OnInit {
     this.updateForm = this.formBuilder.group({ pageName: '', pageTitle: '', pageContent: '', Image: '' });
     this.FetchPageContents();
     this.registerForm = this.formBuilder.group({
-      userEmail: ['', [Validators.required, Validators.email]],
-      userPassword: ['', [Validators.required, Validators.minLength(3)]],
-      userType: [''],
-      userStatus: [''],
+      userGroup: this.formBuilder.group({
+        userEmail: ['', [Validators.required, Validators.email]],
+        userPassword: ['', [Validators.required, Validators.minLength(3)]],
+        userType: [''],
+        userStatus: [''],
+      }),
+      postGroup: this.formBuilder.group({
+        postState: [''],
+        postAuthor: [''],
+        postImage: [''],
+        postContentBrief: ['', Validators.required],
+        postContentExtended: ['', Validators.required],
+      })
     });
     this.upd = '';
+    this.getAllPosts();
   }
 
-  get f() { return this.registerForm.controls; }
+  get fe() { return (this.registerForm.get('userGroup') as FormGroup).controls; }
+
+  get fc() { return (this.registerForm.get('postGroup') as FormGroup).controls; }
+
+  get userGroup() {
+    return this.registerForm.get('userGroup');
+  }
+
+  get postGroup() {
+    return this.registerForm.get('postGroup');
+  }
 
   LoadAllUsers() {
     console.log('loadallusers');
@@ -195,10 +227,10 @@ export class AdminComponent implements OnInit {
   }
 
   onSubmit() {
-    this.submitted = true;
+    this.userGroupSubmitted = true;
 
     // stop here if form is invalid
-    if (this.registerForm.invalid) {
+    if (this.userGroup.invalid) {
       return;
     }
     if (this.upd !== '') {
@@ -209,9 +241,9 @@ export class AdminComponent implements OnInit {
     // Kullanıcı verisini hazırla
     let obj = new User();
     // obj.internalId = '';
-    obj.userEmail = this.registerForm.get('userEmail').value;
-    obj.userPassword = this.registerForm.get('userPassword').value;
-    obj.userType = this.registerForm.get('userType').value;
+    obj.userEmail = this.userGroup.get('userEmail').value;
+    obj.userPassword = this.userGroup.get('userPassword').value;
+    obj.userType = this.userGroup.get('userType').value;
     // obj.userStatus = this.registerForm.get('userStatus').value;
     // obj.userCreated = new Date();
     // obj.userModified = new Date();
@@ -225,7 +257,7 @@ export class AdminComponent implements OnInit {
       .subscribe((res: any) => {
         this.alertify.success(res.message.toString());
         this.LoadAllUsers();
-        this.registerForm.reset();
+        this.userGroup.reset();
       }, (err: HttpErrorResponse) => {
         if (err.status === 400) {
           this.alertify.error(err.error.message);
@@ -239,10 +271,10 @@ export class AdminComponent implements OnInit {
   updateUser(id: string) {
     let obj = JSON.parse('{ "_id":"", "useremail":"", "userpassword":"","usertype":"","userstatus":""}');
     obj._id = '{"$oid":' + id + '}';
-    obj.useremail = this.registerForm.get('userEmail').value;
-    obj.userpassword = this.registerForm.get('userPassword').value;
-    obj.usertype = this.registerForm.get('userType').value;
-    obj.userstatus = this.registerForm.get('userStatus').value;
+    obj.useremail = this.userGroup.get('userEmail').value;
+    obj.userpassword = this.userGroup.get('userPassword').value;
+    obj.usertype = this.userGroup.get('userType').value;
+    obj.userstatus = this.userGroup.get('userStatus').value;
     const header = new HttpHeaders({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
@@ -253,7 +285,7 @@ export class AdminComponent implements OnInit {
         console.log(res);
         this.alertify.success(res.message.toString());
         this.LoadAllUsers();
-        this.registerForm.reset();
+        this.userGroup.reset();
       }, (err: HttpErrorResponse) => {
         if (err.status === 400) {
           // console.log(err.error.message);
@@ -269,10 +301,25 @@ export class AdminComponent implements OnInit {
   getValue(id: string) {
     this.upd = id;
     var found = this.users.filter(x => x.internalId === id)[0];
-    this.registerForm.get('userEmail').setValue(found.userEmail);
-    this.registerForm.get('userPassword').setValue(found.userPassword);
-    this.registerForm.get('userType').setValue(found.userType);
-    this.registerForm.get('userStatus').setValue(found.userStatus);
+    this.userGroup.get('userEmail').setValue(found.userEmail);
+    this.userGroup.get('userPassword').setValue(found.userPassword);
+    this.userGroup.get('userType').setValue(found.userType);
+    this.userGroup.get('userStatus').setValue(found.userStatus);
+  }
+
+  getPost(id: string) {
+    var found = this.posts.filter(x => x.internalId === id)[0];
+    this.postGroup.get('postContentBrief').setValue(found.postContentBrief);
+    this.postGroup.get('postContentExtended').setValue(found.postContentExtended);
+    this.postGroup.get('postImage').setValue(found.postImage);
+    this.postGroup.get('postState').setValue(found.postState);
+  }
+
+  submitPost() {
+    this.postGroupSubmitted = true;
+    if (this.registerForm.invalid) {
+      return;
+    }
   }
 
   onFileChange(event) {
@@ -289,5 +336,16 @@ export class AdminComponent implements OnInit {
     this.pageImage = event.target.result;
     this.pageImage = btoa(this.pageImage);
     // console.log(this.pageImage);
+  }
+
+  getAllPosts() {
+    this.httpClient.get(API_URL + '/api/posts/getposts').subscribe(
+      (response: Post[]) => {
+        this.posts = response.filter(post => post.postState === 'Draft' || post.postState === 'Published');
+      },
+      (err: HttpErrorResponse) => {
+        this.alertify.error(err.message);
+      }
+    );
   }
 }

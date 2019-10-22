@@ -5,6 +5,6 @@ export class Post {
     postImage: string;
     postContentBrief: string;
     postContentExtended: string;
-    postpublishedDate: Date;
+    postPublishedDate: Date;
     postModifiedDate: Date;
 }

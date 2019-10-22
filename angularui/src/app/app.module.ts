@@ -15,7 +15,7 @@ import { SafeHtmlPipe } from './safe-html.pipe';
 import { CKEditorModule } from '../ckeditor/ckeditor.module';
 import { AlertifyService } from './services/alertify.service';
 import { PostComponent } from './components/post/post.component';
-
+import { JwPaginationComponent } from 'jw-angular-pagination';
 
 @NgModule({
   declarations: [
@@ -27,7 +27,8 @@ import { PostComponent } from './components/post/post.component';
     ContactComponent,
     ExampleComponent,
     SafeHtmlPipe,
-    PostComponent
+    PostComponent,
+    JwPaginationComponent
   ],
   imports: [
     BrowserModule,
