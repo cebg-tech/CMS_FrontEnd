@@ -38,7 +38,7 @@
 </div>
 
 <div class="modal fade" id="myPostModal">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
             <!-- Modal Header -->
@@ -55,10 +55,7 @@
                 <div class="lead text-muted">
                 <time>{{ selectedPost.postPublishedDate | date:"MM/dd/yy"}} tarihinde {{ selectedPost.postAuthor }} tarafından girildi.</time>
                 </div>
-                <div class="form-group">
-                        {{ selectedPost.postContentExtended }} 
-                </div>
-                <div class="form-group">
+                <div class="form-group" *ngIf="selectedPost">  <div  [innerHtml]= "selectedPost.postContentExtended"> </div>                  
                 </div>
             </div>
         </div>

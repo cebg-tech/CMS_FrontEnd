@@ -2,6 +2,6 @@
 <div class="container">
     <h3 class="display-3" *ngIf="page">{{ page.pageTitle }}</h3>
     <div *ngIf="page"><div [innerHtml]="page.pageContent "></div></div>
-    <img [src]="'data:image/jpg;base64,'+page.image | safeHtml" />
+    <!-- <img [src]="'data:image/jpg;base64,'+page.image | safeHtml" /> -->
 </div></div>
   

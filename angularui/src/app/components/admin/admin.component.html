@@ -31,7 +31,7 @@
         <tbody>
           <tr *ngFor="let user of users">
             <th scope="row"><a data-toggle="modal" data-target="#myModal" class="text-danger"
-                (click)="getValue(user.internalId)">Düzenle</a></th>
+                (click)="getValue(user.internalId)" style="cursor: pointer;">Düzenle</a></th>
             <td> {{user.userEmail}}</td>
             <td> {{user.userCreated | date: 'dd/MM/yyyy'}} </td>
             <td> <a (click)="deleteUser(user.internalId)" class="text-danger">Sil</a></td>
@@ -58,7 +58,7 @@
           </div>
           <div class="form-group">
             <label for="exampleInputPassword1">Sayfa İçeriği</label>
-            <ckeditor formControlName="pageContent" [editor]="Editor" [(ngModel)]="selectedpage.pageContent">
+            <ckeditor [config]="editorConfig" formControlName="pageContent" [editor]="Editor" [(ngModel)]="selectedpage.pageContent" (ready)="onReady($event)">
             </ckeditor>
           </div>
           <div class="form-group">
@@ -88,12 +88,12 @@
         <tbody>
           <tr class="table-light" *ngFor="let post of posts">
             <th scope="row"><a data-toggle="modal" data-target="#myPostModal" class="text-danger"
-                (click)="getPost(post.internalId)">Düzenle</a></th>
+                (click)="getPost(post.internalId)" style="cursor: pointer;">Düzenle</a></th>
             <td><img src="http://placehold.it/80x80" style="height: 80px;width: 80px;">{{post.postImage}}</td>
             <td>{{post.postAuthor}}</td>
             <td>{{post.postContentBrief | titlecase}}</td>
-            <td>Onayla</td>
-            <td>Arşivle</td>
+            <td><a class="text-danger" (click)="publishPost(post.internalId)" style="cursor: pointer;">Onayla</a></td>
+            <td><a class="text-danger" (click)="archivePost(post.internalId)" style="cursor: pointer;">Arşivle</a></td>
           </tr>
         </tbody>
       </table>
@@ -187,25 +187,17 @@
               <input type="text" formControlName="postContentBrief" class="form-control"
                 [ngClass]="{ 'is-invalid': postGroupSubmitted && fc.postContentBrief.errors }">
             </div>
-            <div *ngIf="postGroupSubmitted && pc.postContentBrief.errors" class="invalid-feedback">
+            <div *ngIf="postGroupSubmitted && fc.postContentBrief.errors" class="invalid-feedback">
               <div *ngIf="fc.postContentBrief.errors.required">Blog için kısa içerik giriniz.</div>
             </div>
             <div class="form-group">
               Blog Ana İçerik
-              <ckeditor [editor]="Editor" formControlName="postContentExtended"
-                [ngClass]="{ 'is-invalid': postGroupSubmitted && fc.postContentExtended.errors }">
+              <ckeditor [config]="editorConfig"  [editor]="Editor" formControlName="postContentExtended" aria-required="postGroup"
+                [ngClass]="{ 'is-invalid': postGroupSubmitted && fc.postContentExtended.errors }" (ready)="onReady($event)">
               </ckeditor>
             </div>
             <div *ngIf="postGroupSubmitted && fc.postContentExtended.errors" class="invalid-feedback">
               <div *ngIf="fc.postContentBrief.errors.required">Blog içeriği giriniz.</div>
-            </div>
-            <div class="form-group">
-              Blog Resmi
-              <div class="custom-file">
-                <input type="file" class="custom-file-input" id="postImage">
-                <label class="custom-file-label" for="postImage">Resim Seçin</label>
-              </div>
-              <img src="http://placehold.it/80x80" style="height:80px;width: 80;">
             </div>
             <div class="form-group">
               <label for="exampleSelect1">Blog Durumu</label>

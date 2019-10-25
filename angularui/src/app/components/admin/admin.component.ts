@@ -8,6 +8,7 @@ import { User } from 'src/app/models/user';
 import * as ClassicEditorBuild from '@ckeditor/ckeditor5-build-classic';
 import { AlertifyService } from '../../services/alertify.service';
 import { Post } from 'src/app/models/post';
+import {MyUploadAdapter} from '../../helpers/MyUploader';
 
 const API_URL = environment.apiUrl;
 
@@ -34,8 +35,12 @@ export class AdminComponent implements OnInit {
   posts: Post[] = [];
   registerForm: FormGroup;
   upd: string;
+  updPost: string;
   pageImage: string;
   Editor = ClassicEditorBuild;
+  editorConfig = {
+    placeholder: 'Birşeyler yazın..'
+  };
   userGroupSubmitted: boolean = false;
   postGroupSubmitted: boolean = false;
 
@@ -83,7 +88,14 @@ export class AdminComponent implements OnInit {
       })
     });
     this.upd = '';
+    this.updPost = '';
     this.getAllPosts();
+  }
+
+  onReady($event) {
+    $event.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+      return new MyUploadAdapter(loader);
+    };
   }
 
   get fe() { return (this.registerForm.get('userGroup') as FormGroup).controls; }
@@ -99,7 +111,6 @@ export class AdminComponent implements OnInit {
   }
 
   LoadAllUsers() {
-    console.log('loadallusers');
     const header = new HttpHeaders({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
@@ -119,7 +130,6 @@ export class AdminComponent implements OnInit {
   }
 
   CheckAuthorize(inputToken: string, userMail: string) {
-    console.log('admin.checkauthorize');
     var obj = JSON.parse('{ "userEmail":""}');
     obj.userEmail = userMail;
     const _header = new HttpHeaders({
@@ -145,7 +155,6 @@ export class AdminComponent implements OnInit {
       .get(API_URL + '/api/pages/GetAllPages', { headers: header })
       .subscribe((res: Page[]) => {
         this.pages = res;
-        console.log(this.pages);
       }, (err: HttpErrorResponse) => {
         if (err.status === 400) {
           // console.log(err.error.message);
@@ -184,7 +193,6 @@ export class AdminComponent implements OnInit {
     this.httpClient
       .post(API_URL + '/api/pages/UpdatePage', obj, { headers: header })
       .subscribe((res: any) => {
-        console.log(res);
         this.alertify.success(res.message.toString());
       }, (err: HttpErrorResponse) => {
         if (err.status === 400) {
@@ -205,7 +213,6 @@ export class AdminComponent implements OnInit {
     if (!confirm('Emin misin?')) {
       return;
     }
-    console.log('sil ' + id);
     const header = new HttpHeaders({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
@@ -226,6 +233,7 @@ export class AdminComponent implements OnInit {
       });
   }
 
+  // Submitting the usergroup
   onSubmit() {
     this.userGroupSubmitted = true;
 
@@ -234,7 +242,6 @@ export class AdminComponent implements OnInit {
       return;
     }
     if (this.upd !== '') {
-      console.log('Update');
       this.updateUser(this.upd);
       return;
     }
@@ -282,7 +289,6 @@ export class AdminComponent implements OnInit {
     this.httpClient
       .put(API_URL + '/api/users/' + id, obj, { headers: header })
       .subscribe((res: any) => {
-        console.log(res);
         this.alertify.success(res.message.toString());
         this.LoadAllUsers();
         this.userGroup.reset();
@@ -308,6 +314,7 @@ export class AdminComponent implements OnInit {
   }
 
   getPost(id: string) {
+    this.updPost = id;
     var found = this.posts.filter(x => x.internalId === id)[0];
     this.postGroup.get('postContentBrief').setValue(found.postContentBrief);
     this.postGroup.get('postContentExtended').setValue(found.postContentExtended);
@@ -315,11 +322,44 @@ export class AdminComponent implements OnInit {
     this.postGroup.get('postState').setValue(found.postState);
   }
 
+  // submitting the postgroup
   submitPost() {
     this.postGroupSubmitted = true;
-    if (this.registerForm.invalid) {
+    if (this.postGroup.invalid) {
       return;
     }
+    if (this.updPost !== '') {
+      this.updatepost(this.updPost);
+      return;
+    }
+    // Post verisini hazırla
+    let activeUser =  JSON.parse(localStorage.getItem('ActiveUser')) as User;
+    let obj = new Post();
+    obj.postAuthor =  activeUser.userEmail;
+    obj.postContentBrief = this.postGroup.get('postContentBrief').value;
+    obj.postContentExtended = this.postGroup.get('postContentExtended').value;
+    obj.postImage = null;
+    obj.postState = this.postGroup.get('postState').value;
+    obj.postModifiedDate = obj.postPublishedDate = new Date();
+
+    const header = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
+    });
+    this.httpClient
+      .post(API_URL + '/api/posts/addpost', obj, { headers: header })
+      .subscribe((res: any) => {
+        this.alertify.success(res.message.toString());
+        this.getAllPosts();
+        this.postGroup.reset();
+      }, (err: HttpErrorResponse) => {
+        if (err.status === 400) {
+          this.alertify.error(err.error.message);
+        } else if (err.status === 401) {
+          this.alertify.error('Tekrar giriş yapınız!');
+          this.router.navigate(['/login']);
+        }
+      });
   }
 
   onFileChange(event) {
@@ -348,4 +388,68 @@ export class AdminComponent implements OnInit {
       }
     );
   }
+
+  archivePost(id: string) {
+    if (confirm('Postu arşivlemek istediğinizden emin misiniz?')) {
+      const header = new HttpHeaders({
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
+      });
+      this.httpClient.post(API_URL + '/api/posts/UpdatePostState?id=' + id + '&type=Archived', null, { headers: header }).subscribe(
+        (res: any) => {
+          this.alertify.success(res.message.toString());
+        },
+        (err: HttpErrorResponse) => {
+          this.alertify.error(err.message);
+        }
+      );
+    }
+  }
+
+  publishPost(id: string) {
+    if (confirm('Postu yayınlamak istediğinizden emin misiniz?')) {
+      const header = new HttpHeaders({
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
+      });
+      this.httpClient.post(API_URL + '/api/posts/UpdatePostState?id=' + id + '&type=Published', null, { headers: header }).subscribe(
+        (res: any) => {
+          this.alertify.success(res.message.toString());
+        },
+        (err: HttpErrorResponse) => {
+          this.alertify.error(err.message);
+        }
+      );
+    }
+  }
+
+  updatepost(id: string) {
+    let obj = new Post();
+    obj.postContentBrief = this.postGroup.get('postContentBrief').value;
+    obj.postContentExtended = this.postGroup.get('postContentExtended').value;
+    obj.postImage = null;
+    obj.postState = this.postGroup.get('postState').value;
+    const header = new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('CMS_Token')}`
+    });
+    this.httpClient
+      .put(API_URL + '/api/posts/' + id, obj, { headers: header })
+      .subscribe((res: any) => {
+        this.alertify.success(res.message.toString());
+        this.getAllPosts();
+        this.postGroup.reset();
+      }, (err: HttpErrorResponse) => {
+        if (err.status === 400) {
+          // console.log(err.error.message);
+          this.alertify.error(err.error.message);
+        } else if (err.status === 401) {
+          this.alertify.error('Tekrar giriş yapınız!');
+          this.router.navigate(['/login']);
+        }
+      });
+    this.updPost = '';
+  }
 }
+
+

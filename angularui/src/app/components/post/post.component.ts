@@ -3,7 +3,6 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from 'src/environments/environment.prod';
 import { Post } from '../../models/post';
 import { AlertifyService } from 'src/app/services/alertify.service';
-import { post } from 'selenium-webdriver/http';
 
 const API_URL = environment.apiUrl;
 
@@ -43,7 +42,7 @@ export class PostComponent implements OnInit {
     this.selectedPost = this.posts.filter(post => post.internalId === id)[0];
   }
 
-  onChangePage(pageOfItems: Array<any>) {
+  onChangePage(pageOfItems) {
     // update current page of items
     this.pageOfItems = pageOfItems;
   }

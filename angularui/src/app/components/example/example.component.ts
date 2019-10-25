@@ -1,42 +1,37 @@
-import { Component, AfterViewInit} from '@angular/core';
-import { MustMatch } from '../../helpers/must-match.validator';
-import { FormGroup, FormControl } from '@angular/forms';
-import * as ClassicEditorBuild from '@ckeditor/ckeditor5-build-classic';
-
-
+import { Component, OnInit } from '@angular/core';
+import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { Router } from '@angular/router';
+import { IArticle } from 'src/app/models/IArticle';
+import {MyUploadAdapter} from '../../helpers/MyUploader'
 
 @Component({
   selector: 'app-example',
   templateUrl: './example.component.html'
 })
-export class ExampleComponent implements AfterViewInit {
-  public Editor = ClassicEditorBuild;
+export class ExampleComponent implements OnInit {
+  public Editor = ClassicEditor;
+  editorConfig = {
+    placeholder: 'Type the content here!'
+  };
+  article: IArticle;
 
-	public demoReactiveForm = new FormGroup( {
-		name: new FormControl( 'John' ),
-		surname: new FormControl( 'Doe' ),
-		description: new FormControl( '<p>A <b>really</b> nice fellow.</p>' ),
-	} );
+  constructor(private router: Router) {
+    this.article = {
+      title: '',
+      text: '',
+    };
+  }
 
-	public formDataPreview?: string;
+  onReady($event) {
+    $event.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+      return new MyUploadAdapter(loader);
+    };
+  }
 
-	public ngAfterViewInit() {
-		this.demoReactiveForm!.valueChanges
-			.subscribe( values => {
-				this.formDataPreview = JSON.stringify( values );
-			} );
-	}
+  ngOnInit() {}
 
-	public onSubmit() {
-		console.log( 'Form submit, model', this.demoReactiveForm.value );
-	}
+  onSubmit() {
+    this.router.navigate(['/view'], { state: this.article});
+  }
 
-	public reset() {
-		this.demoReactiveForm!.reset();
-	}
-
-	public get description() {
-		return this.demoReactiveForm!.controls.description;
-	}
 }
-

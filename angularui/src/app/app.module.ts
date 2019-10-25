@@ -12,7 +12,7 @@ import { AboutusComponent } from './components/aboutus/aboutus.component';
 import { ContactComponent } from './components/contact/contact.component';
 import { ExampleComponent } from './components/example/example.component';
 import { SafeHtmlPipe } from './safe-html.pipe';
-import { CKEditorModule } from '../ckeditor/ckeditor.module';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { AlertifyService } from './services/alertify.service';
 import { PostComponent } from './components/post/post.component';
 import { JwPaginationComponent } from 'jw-angular-pagination';
