@@ -61,13 +61,13 @@
             <ckeditor [config]="editorConfig" formControlName="pageContent" [editor]="Editor" [(ngModel)]="selectedpage.pageContent" (ready)="onReady($event)">
             </ckeditor>
           </div>
-          <div class="form-group">
+          <!-- <div class="form-group">
             <div class="custom-file">
               <input type="file" id="inputGroupFile02" (change)="onFileChange($event)">
               <div *ngIf="selectedpage.image"><img [src]="'data:image/jpg;base64,'+selectedpage.image | safeHtml" />
               </div>
             </div>
-          </div>
+          </div>  -->
         </fieldset>
         <button class="btn btn-primary">Güncelle</button>
       </form>
@@ -78,7 +78,6 @@
           <tr>
             <th scope="col"><button class="btn btn-outline-primary" data-toggle="modal" data-target="#myPostModal"
                 (click)="this.postGroup.reset();">Ekle</button></th>
-            <th scope="col">Post Resmi</th>
             <th scope="col">Post Yazarı</th>
             <th scope="col">Post Kısa İçerik</th>
             <th scope="col"></th>
@@ -89,7 +88,6 @@
           <tr class="table-light" *ngFor="let post of posts">
             <th scope="row"><a data-toggle="modal" data-target="#myPostModal" class="text-danger"
                 (click)="getPost(post.internalId)" style="cursor: pointer;">Düzenle</a></th>
-            <td><img src="http://placehold.it/80x80" style="height: 80px;width: 80px;">{{post.postImage}}</td>
             <td>{{post.postAuthor}}</td>
             <td>{{post.postContentBrief | titlecase}}</td>
             <td><a class="text-danger" (click)="publishPost(post.internalId)" style="cursor: pointer;">Onayla</a></td>

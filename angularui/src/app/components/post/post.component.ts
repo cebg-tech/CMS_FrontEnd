@@ -13,6 +13,7 @@ const API_URL = environment.apiUrl;
 })
 export class PostComponent implements OnInit {
   today = new Date();
+  p: number = 1;
 
   constructor(
     private httpClient: HttpClient,
