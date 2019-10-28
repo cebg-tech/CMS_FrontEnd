@@ -14,7 +14,8 @@ const API_URL = environment.apiUrl;
 export class PostComponent implements OnInit {
   today = new Date();
   p: number = 1;
-
+  filterText: string;
+  
   constructor(
     private httpClient: HttpClient,
     private alertify: AlertifyService

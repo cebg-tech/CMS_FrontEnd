@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Router } from '@angular/router';
-import { IArticle } from 'src/app/models/IArticle';
-import {MyUploadAdapter} from '../../helpers/MyUploader'
+import {MyUploadAdapter} from '../../helpers/MyUploader';
 
 @Component({
   selector: 'app-example',
@@ -13,13 +12,8 @@ export class ExampleComponent implements OnInit {
   editorConfig = {
     placeholder: 'Type the content here!'
   };
-  article: IArticle;
 
   constructor(private router: Router) {
-    this.article = {
-      title: '',
-      text: '',
-    };
   }
 
   onReady($event) {
@@ -31,7 +25,7 @@ export class ExampleComponent implements OnInit {
   ngOnInit() {}
 
   onSubmit() {
-    this.router.navigate(['/view'], { state: this.article});
+   // this.router.navigate(['/view'], { state: this.article});
   }
 
 }

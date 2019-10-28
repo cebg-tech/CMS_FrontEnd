@@ -16,6 +16,7 @@ import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { AlertifyService } from './services/alertify.service';
 import { PostComponent } from './components/post/post.component';
 import { NgxPaginationModule} from 'ngx-pagination';
+import { PostFilterPipe } from './post-filter.pipe';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { NgxPaginationModule} from 'ngx-pagination';
     ContactComponent,
     ExampleComponent,
     SafeHtmlPipe,
-    PostComponent
+    PostComponent,
+    PostFilterPipe
     
   ],
   imports: [

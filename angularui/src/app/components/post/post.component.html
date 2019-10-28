@@ -2,7 +2,8 @@
 <hr class="my-4">
 <div class="lead text-muted">{{posts.length}} adet post gösteriliyor.</div>
 <br />
-<div class="card border-secondary mb-3" *ngFor="let post of posts | paginate: { itemsPerPage: 5, currentPage: p }">
+<input class="form-control mr-sm-2" type="text" placeholder="Search" [(ngModel)]="filterText">
+<div class="card border-secondary mb-3" *ngFor="let post of posts| postFilter:filterText | paginate: { itemsPerPage: 5, currentPage: p }">
     <div class="card-header"></div>
     <div class="card-body">
         <div class="media-body">
