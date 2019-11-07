@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment.prod';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
@@ -8,7 +8,8 @@ import { User } from 'src/app/models/user';
 import * as ClassicEditorBuild from '@ckeditor/ckeditor5-build-classic';
 import { AlertifyService } from '../../services/alertify.service';
 import { Post } from 'src/app/models/post';
-import {MyUploadAdapter} from '../../helpers/MyUploader';
+import { MyUploadAdapter } from '../../helpers/MyUploader';
+import { Subject } from 'rxjs';
 
 const API_URL = environment.apiUrl;
 
@@ -26,6 +27,7 @@ export class AdminComponent implements OnInit {
     private alertify: AlertifyService
   ) { }
 
+  dtTrigger: Subject<any> = new Subject();
   pages: any;
   selectedpage: any;
   updateForm: FormGroup;
@@ -53,6 +55,7 @@ export class AdminComponent implements OnInit {
     this.activeUser = new User();
     this.activeUser.internalId = raw.internalId;
     this.activeUser.userEmail = raw.userEmail;
+    this.activeUser.userType = raw.userType;
 
     // If the user is an editor than show only post page
     if (raw.userType === 2) {
@@ -333,9 +336,9 @@ export class AdminComponent implements OnInit {
       return;
     }
     // Post verisini hazırla
-    let activeUser =  JSON.parse(localStorage.getItem('ActiveUser')) as User;
+    let activeUser = JSON.parse(localStorage.getItem('ActiveUser')) as User;
     let obj = new Post();
-    obj.postAuthor =  activeUser.userEmail;
+    obj.postAuthor = activeUser.userEmail;
     obj.postContentBrief = this.postGroup.get('postContentBrief').value;
     obj.postContentExtended = this.postGroup.get('postContentExtended').value;
     obj.postImage = null;
@@ -381,6 +384,14 @@ export class AdminComponent implements OnInit {
   getAllPosts() {
     this.httpClient.get(API_URL + '/api/posts/getposts').subscribe(
       (response: Post[]) => {
+        if (this.activeUser.userType == 2) {
+          this.posts = response.filter(post =>
+            post.postAuthor == this.activeUser.userEmail
+            && (post.postState == 'Draft'
+            || post.postState == 'Published')
+           );
+          return;
+        }
         this.posts = response.filter(post => post.postState === 'Draft' || post.postState === 'Published');
       },
       (err: HttpErrorResponse) => {
@@ -407,6 +418,11 @@ export class AdminComponent implements OnInit {
   }
 
   publishPost(id: string) {
+    if(this.activeUser.userType == 2)
+    {
+      this.alertify.warning('Admin tarafından onaylanacaktır!');
+      return;
+    }
     if (confirm('Postu yayınlamak istediğinizden emin misiniz?')) {
       const header = new HttpHeaders({
         'Content-Type': 'application/json',
